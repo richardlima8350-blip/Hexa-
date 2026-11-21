@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Omni Aggregator • GPT-5 ao 6 & Claude Fable</title>
+  <script src="https://tailwindcss.com"></script>
+  <style>
+    body {
+      background-color: #121214;
+      color: #f4f4f5;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    }
+    /* Caixa principal com brilho sutil roxo/azul igual às referências */
+    .composer-glow {
+      background-color: #1b1b1f;
+      border: 1px solid rgba(139, 92, 246, 0.35);
+      box-shadow: 0 0 35px rgba(124, 58, 237, 0.14), 0 10px 30px rgba(0, 0, 0, 0.6);
+      transition: border-color 0.25s, box-shadow 0.25s;
+    }
+    .composer-glow:focus-within {
+      border-color: rgba(167, 139, 250, 0.75);
+      box-shadow: 0 0 45px rgba(139, 92, 246, 0.28), 0 10px 30px rgba(0, 0, 0, 0.7);
+    }
+    /* Pílula de modelo igual à foto */
+    .model-pill {
+      background: linear-gradient(135deg, rgba(139, 92, 246, 0.32) 0%, rgba(59, 130, 246, 0.22) 100%);
+      border: 1px solid rgba(167, 139, 250, 0.5);
+      box-shadow: 0 0 18px rgba(139, 92, 246, 0.25);
+    }
+    /* Barra de esforço brilhante */
+    .effort-pill {
+      background: linear-gradient(90deg, #4f46e5 0%, #8b5cf6 50%, #2563eb 100%);
+      box-shadow: 0 0 15px rgba(139, 92, 246, 0.45);
+    }
+    textarea::-webkit-scrollbar { display: none; }
+  </style>
+</head>
+<body class="min-h-screen flex flex-col justify-between p-4 md:p-8">
+
+  <!-- Barra Superior Minimalista -->
+  <header class="max-w-3xl w-full mx-auto flex flex-wrap justify-between items-center gap-2 text-xs text-zinc-400">
+    <div class="flex items-center gap-2">
+      <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+      <span class="font-medium text-zinc-300">Omni Ecosystem</span>
+      <span class="text-zinc-600">•</span>
+      <span>GPT 5→6 & Claude Fable</span>
+    </div>
+
+    <!-- Campo direto para colar a chave gratuita sem mexer no código -->
+    <div class="flex items-center gap-2">
+      <input 
+        id="api-key-input" 
+        type="password" 
+        placeholder="Cole sua chave Groq/OpenRouter aqui..." 
+        class="bg-zinc-900/90 border border-zinc-800 rounded-lg px-2.5 py-1 text-xs text-zinc-200 placeholder-zinc-600 focus:outline-none focus:border-purple-500 w-44 sm:w-56"
+      />
+      <button onclick="salvarChave()" class="bg-zinc-800 hover:bg-zinc-700 text-zinc-200 px-2.5 py-1 rounded-lg transition">
+        Salvar
+      </button>
+    </div>
+  </header>
+
+  <!-- Área Central (Tela Inicial ou Mensagens) -->
+  <main class="flex-1 flex flex-col items-center justify-center max-w-3xl w-full mx-auto my-6 overflow-y-auto">
+    
+    <div id="welcome-screen" class="flex flex-col items-center text-center">
+      <!-- Ícone central estilo raciocínio -->
+      <div class="mb-5 text-zinc-200">
+        <svg width="52" height="52" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M12 5a3 3 0 1 0-5.997.125 4 4 0 0 0-2.526 5.77 4 4 0 0 0 .556 6.588A4 4 0 1 0 12 18Z"/>
+          <path d="M12 5a3 3 0 1 1 5.997.125 4 4 0 0 1 2.526 5.77 4 4 0 0 1-.556 6.588A4 4 0 1 1 12 18Z"/>
+          <path d="M15 13a4.5 4.5 0 0 1-3-4 4.5 4.5 0 0 1-3 4"/>
+        </svg>
+      </div>
+      <h1 class="text-3xl md:text-5xl font-medium tracking-tight text-zinc-100">
+        What should we build?
+      </h1>
+    </div>
+
+    <div id="messages" class="w-full space-y-4 hidden"></div>
+  </main>
+
+  <!-- Caixa de Comando Inferior (Visual exato da foto e das referências) -->
+  <footer class="max-w-3xl w-full mx-auto">
+    <div class="composer-glow rounded-3xl p-4">
+      
+      <!-- Linha Superior: Ambiente + Seletor de Modelos -->
+      <div class="flex flex-wrap items-center justify-between gap-2 pb-3 mb-3 border-b border-zinc-800/80">
+        
+        <div class="flex items-center gap-2 text-zinc-300 text-xs sm:text-sm">
+          <div class="flex items-center gap-2 bg-zinc-800/80 px-3 py-1.5 rounded-xl border border-zinc-700/50">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <rect x="2" y="3" width="20" height="14" rx="2"></rect>
+              <line x1="8" y1="21" x2="16" y2="21"></line>
+              <line x1="12" y1="17" x2="12" y2="21"></line>
+            </svg>
+            <span class="font-medium">This computer</span>
+          </div>
+          <span class="text-zinc-500">⚡</span>
+        </div>
+
+        <!-- Dropdown Compacto dos Modelos (GPT 5 ao 6 + Claude Fable) -->
+        <select id="model-select" class="model-pill appearance-none text-zinc-100 text-xs sm:text-sm font-medium pl-3.5 pr-7 py-1.5 rounded-2xl cursor-pointer focus:outline-none">
+          <optgroup label="Série GPT (5 ao 6)" class="bg-zinc-900">
+            <option value="GPT-6.2 Astra" selected>Ultra • GPT-6.2 Astra ›</option>
+            <option value="GPT-6.2 Sol">Pro • GPT-6.2 Sol ›</option>
+            <option value="GPT-6.1 Sol">Fast • GPT-6.1 Sol ›</option>
+            <option value="GPT-6 Luna">Core • GPT-6 Luna ›</option>
+            <option value="GPT-5.5">Lite • GPT-5.5 ›</option>
+            <option value="GPT-5">Base • GPT-5 ›</option>
+          </optgroup>
+          <optgroup label="Série Claude (até Fable)" class="bg-zinc-900">
+            <option value="Claude Fable 5.2">Creative • Claude Fable 5.2 ›</option>
+            <option value="Claude Opus 5.5">Deep • Claude Opus 5.5 ›</option>
+            <option value="Claude Mythos 5.2">Logic • Claude Mythos 5.2 ›</option>
+          </optgroup>
+        </select>
+      </div>
+
+      <!-- Campo de Digitação -->
+      <textarea 
+        id="prompt-input" 
+        rows="2" 
+        placeholder="Do anything..." 
+        class="w-full bg-transparent text-zinc-100 placeholder-zinc-500 text-base md:text-lg resize-none focus:outline-none"
+      ></textarea>
+
+      <!-- Barra Inferior: Ações + Esforço + Enviar -->
+      <div class="flex items-center justify-between mt-3 pt-1">
+        <div class="flex items-center gap-2 text-zinc-400">
+          <button onclick="limparChat()" title="Nova conversa" class="w-8 h-8 rounded-full bg-zinc-800 hover:bg-zinc-700 flex items-center justify-center transition text-sm">
+            +
+          </button>
+        </div>
+
+        <div class="flex items-center gap-2.5">
+          <!-- Botão de Esforço em gradiente roxo/azul -->
+          <button onclick="alternarEsforco()" class="effort-pill text-white text-xs font-medium px-4 py-1.5 rounded-full transition active:scale-95">
+            Select effort: <span id="effort-label">High</span>
+          </button>
+
+          <!-- Botão Enviar -->
+          <button onclick="enviarMensagem()" class="w-9 h-9 rounded-full bg-zinc-100 hover:bg-white text-zinc-900 flex items-center justify-center font-bold shadow-lg transition active:scale-95">
+            ↑
+          </button>
+        </div>
+      </div>
+
+    </div>
+  </footer>
+
+  <script>
+    const niveis = ["Low", "Medium", "High", "Ultra"];
+    let idxNivel = 2;
+
+    // Carrega chave salva no navegador do celular/PC
+    window.onload = () => {
+      const salva = localStorage.getItem("omni_free_key");
+      if (salva) document.getElementById("api-key-input").value = salva;
+    };
+
+    function salvarChave() {
+      const k = document.getElementById("api-key-input").value.trim();
+      localStorage.setItem("omni_free_key", k);
+      alert("Chave salva com sucesso no seu navegador!");
+    }
+
+    function alternarEsforco() {
+      idxNivel = (idxNivel + 1) % niveis.length;
+      document.getElementById("effort-label").innerText = niveis[idxNivel];
+    }
+
+    function limparChat() {
+      document.getElementById("messages").innerHTML = "";
+      document.getElementById("messages").classList.add("hidden");
+      document.getElementById("welcome-screen").classList.remove("hidden");
+    }
+
+    async function enviarMensagem() {
+      const input = document.getElementById("prompt-input");
+      const texto = input.value.trim();
+      if (!texto) return;
+
+      const modelo = document.getElementById("model-select").value;
+      const esforco = niveis[idxNivel];
+      const apiKey = localStorage.getItem("omni_free_key") || document.getElementById("api-key-input").value.trim();
+
+      document.getElementById("welcome-screen").classList.add("hidden");
+      const area = document.getElementById("messages");
+      area.classList.remove("hidden");
+
+      area.innerHTML += `
+        <div class="flex justify-end">
+          <div class="bg-zinc-800 text-zinc-100 px-4 py-3 rounded-2xl max-w-[85%] text-sm md:text-base">${texto}</div>
+        </div>
+      `;
+      input.value = "";
+
+      const respId = "r-" + Date.now();
+      area.innerHTML += `
+        <div class="flex justify-start">
+          <div id="${respId}" class="bg-[#1b1b1f] border border-zinc-800 text-zinc-200 px-4 py-3 rounded-2xl max-w-[85%] text-sm md:text-base whitespace-pre-wrap">
+            <div class="text-xs text-purple-400 font-semibold mb-1">${modelo} • Effort: ${esforco}</div>
+            <span class="text-zinc-500 animate-pulse">Pensando...</span>
+          </div>
+        </div>
+      `;
+
+      // Se não tiver chave colada ainda, avisa como ativar em 10 segundos
+      if (!apiKey) {
+        document.getElementById(respId).innerHTML = `
+          <div class="text-xs text-purple-400 font-semibold mb-1">${modelo} • Effort: ${esforco}</div>
+          <div>Visual ativo! Para esse modelo responder de verdade de graça, cole uma chave gratuita do <b>Groq</b> (começa com <code>gsk_</code>) no campo lá no topo e clique em <b>Salvar</b>.</div>
+        `;
+        return;
+      }
+
+      // Conexão real com o motor gratuito Groq sustentando a identidade do modelo escolhido
+      try {
